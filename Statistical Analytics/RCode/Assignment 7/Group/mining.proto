@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package Mining;
+option optimize_for = SPEED;
+
+// Server -> Client.
+message Event {
+    optional int64 server_timestamp_usec = 1;    
+    optional string error                = 2;
+    optional bool stream_end             = 3;
+    optional double penalty              = 4;
+    optional int64 score                 = 5;
+}
+
+
+// Signal of frequency change. Client -> Server.
+message Signal {
+    optional bool signal                 = 1;    
+}

@@ -1,0 +1,8 @@
+numpy
+matplotlib
+scikit-learn
+pandas
+pillow
+cycler
+imageio
+joblib
