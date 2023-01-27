@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4fbc3cab-fe3e-478b-8a69-1bdee87c9a92" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assignment_2_Srna.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment_2_Srna.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/delta_reduced.npy" beforeDir="false" afterPath="$PROJECT_DIR$/delta_reduced.npy" afterDir="false" />
     </list>
@@ -48,6 +49,9 @@
       <workItem from="1674243695234" duration="107000" />
       <workItem from="1674246367270" duration="2755000" />
       <workItem from="1674502256690" duration="10795000" />
+      <workItem from="1674542957145" duration="4497000" />
+      <workItem from="1674633402081" duration="4793000" />
+      <workItem from="1674698483817" duration="21462000" />
     </task>
     <servers />
   </component>
