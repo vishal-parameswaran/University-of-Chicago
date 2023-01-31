@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4fbc3cab-fe3e-478b-8a69-1bdee87c9a92" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../../Linear-Non Linear Models/Assignment 2/assignment-2-lnl.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assignment_2_Srna.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment_2_Srna.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/delta_reduced.npy" beforeDir="false" afterPath="$PROJECT_DIR$/delta_reduced.npy" afterDir="false" />
-    </list>
+    <list default="true" id="4fbc3cab-fe3e-478b-8a69-1bdee87c9a92" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,7 +27,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/yomaa/Documents/Github/University-of-Chicago/Data Mining Principles/Assignment 2",
+    "last_opened_file_path": "C:/Users/yomaa/Documents/Github/University-of-Chicago/Linear-Non Linear Models/Assignment 2",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -58,6 +53,7 @@
       <workItem from="1675039685884" duration="3418000" />
       <workItem from="1675048708343" duration="1795000" />
       <workItem from="1675077182936" duration="2068000" />
+      <workItem from="1675107509533" duration="58000" />
     </task>
     <servers />
   </component>

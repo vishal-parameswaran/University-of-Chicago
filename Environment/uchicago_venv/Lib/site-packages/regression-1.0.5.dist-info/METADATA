@@ -1,0 +1,49 @@
+Metadata-Version: 2.1
+Name: regression
+Version: 1.0.5
+Summary: Recreation of different kinds of regression using optimisation algorithms
+Home-page: https://github.com/Muradmustafayev-03/RegressionRecreation.git
+Author: Murad Mustafayev
+Author-email: murad.mustafayev@ufaz.az
+Project-URL: Bug Reports, https://github.com/Muradmustafayev-03/RegressionRecreation/issues
+Project-URL: Funding, https://donate.pypi.org
+Project-URL: Source, https://github.com/Muradmustafayev-03/RegressionRecreation/
+Keywords: regression,linear regression,polynomial regression,multivariate regression,Artificial Intelligence,Machine Learning,Data Science,ML,AI
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.7, <4
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: click (==8.1.3)
+Requires-Dist: colorama (==0.4.5)
+Requires-Dist: numpy (==1.23.3)
+Requires-Dist: optimisation-algorithms (==1.1.2)
+
+# RegressionRecreation
+Recreation of different kinds of regression using optimisation algorithms
+
+---
+
+This repository is created by and belongs to: https://github.com/Muradmustafayev-03
+
+Contributing guide: https://github.com/Muradmustafayev-03/RegressionRecreation/blob/main/CONTRIBUTING.md
+
+To report any issues: https://github.com/Muradmustafayev-03/RegressionRecreation/issues
+
+To install the package as a library use: 
+> *pip install regression*
+
+Then to import:
+> *import regression*
+
+---
+
+In this package you can find the following models: *PolynomialRegressor, LinearRegressor, MultivariateRegressor*
