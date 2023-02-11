@@ -1,0 +1,12 @@
+
+Step 1:
+Preprocess the data. Selection/generation/ transformation of categorical variables, useful variables etc all your discretion.
+
+Step 2:
+Build your models: Please build classification models in Python to predict the Survived binary status assigned to a passenger. When writing the code associated with each model, please have the first part produce and save the model, followed by a second part that loads and applies the model.
+
+Step 3:
+Test your models using the data found within the "Holdout_testing" file. Save the results of the final model (remember you will only predict the Survived column in holdout test set with your best model results) in a single, separate CSV titled "Titanic Results from" *insert your name or UChicago net ID.
+
+Step 4:
+Submit your work: Please submit all of your code for cleaning, prepping, and modeling your data, your "Results" file, a brief write-up comparing the pros and cons of the modeling techniques you used (no more than a paragraph). Your work will be scored on techniques used (appropriateness and complexity), model performance - measured by accuracy precision and F score - on the data hold out, an understanding of the techniques you compared in your write-up, and your overall code.
