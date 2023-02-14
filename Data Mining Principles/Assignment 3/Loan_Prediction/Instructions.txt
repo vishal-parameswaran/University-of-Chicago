@@ -10,3 +10,41 @@ Test your models using the data found within the "Holdout for Testing" file. Sav
 
 Step 4:
 Submit your work: Please submit all of your code for cleaning, prepping, and modeling your data, your "Results" file, a brief write-up comparing the pros and cons of the modeling techniques you used (no more than a paragraph). Your work will be scored on techniques used (appropriateness and complexity), model performance - measured by RMSE - on the data hold out, an understanding of the techniques you compared in your write-up, and your overall code.
+
+
+
+
+Definitions
+
+X1: Percentage : Remove the percent and convert to x/100 form : replace by interpolate
+X2: Numerical : Drop
+X3: Numerical : Drop
+X4 to X6: Money Remove the $
+X7: Categorical
+*X8: Make categorical : replace with most
+*X9: Make categorical : replace with most
+*X10: Make categorical : replace with most
+*X11: Make categorical : replace with most
+*X12: Make categorical : replace with most
+*X13: Make categorical : replace with most
+X14: Make categorical
+X15: convert to datetime
+*X16: Drop more than 50% null
+X17: Make categorical
+X18: Drop
+X19: ZipCode
+X20: State, Categorical
+X21: Numerical
+X22: Categorical to Numberical
+X23: DateTime
+X24: Categorical to Numberical
+*X25: Drop more than 50% null
+*X26: Drop more than 80% null
+X27: Categorical to Numberical
+X28: Numerical
+X29: Numerical
+*X30: Percentage : Remove the percent and convert to x/100 form : replace by interpolate
+X31: Numerical
+X32: Output
+
+
