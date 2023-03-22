@@ -1,0 +1,105 @@
+/*****************************************************************************
+                    DATA ENGINEERING PLATFORMS (MSCA 31012) IP01
+** File:   Assignment - 8 (WEEK 9) Neo4j (Graph Database)
+** Auth:   Vishal Parameswaran
+** Date:   07/12/2022
+*****************************************************************************/
+
+/*****************************************************************************
+                        DOCUMENT WISE ASSUMPTIONS
+1) Nil
+*****************************************************************************/
+
+/*****************************************************************************
+                                ANSWERS
+*****************************************************************************/
+
+/* 1)Find all producers that produced the movie When Harry Met Sally. */
+
+MATCH (pe:Person) - [:PRODUCED] -> (mo:Movie {title:'When Harry Met Sally'})  RETURN pe
+
+/* 2)Find directors who have directed more than 2 movies.  Return the name of the director and the count of movies they directed, ordered by movie count in descending order. */
+
+MATCH (director:Person) - [:DIRECTED] -> (m:Movie) 
+WITH director , count(m) AS countMovie
+WHERE countMovie > 2
+RETURN director.name,countMovie
+ORDER BY countMovie DESC
+
+/* 3)Find the actors who acted in 5+ movies and the movies in which they acted.  Return the name of the actor, and the title of the films, ordered by the number of films acted per actor in descending order. */
+
+MATCH (actor:Person) -[:ACTED_IN] -> (m:Movie)
+WITH actor.name AS actorname,count(m) AS countmovie,collect(m.title) AS title
+WHERE countmovie > 5
+RETURN actorname,title,countmovie
+ORDER BY countmovie DESC
+
+/* 4)Find the people who were the producer, writer, AND director (the same person who held all 3 roles) at the same time on a film. Return the names of the people and the titles of the films. */
+
+MATCH (p1:Person) -[:PRODUCED] ->(m:Movie),
+(p2:Person) -[:WROTE] -> (m:Movie),
+(p3:Person) -[:DIRECTED] -> (m:Movie)
+WHERE p1 = p2 = p3
+RETURN p1.name,m.title
+
+/* 5)Find all the actors that are exactly 3 degrees away from Tom Hanks.  NOTE: In this case, we want to define a "degree" as a common connection between two people.  So, if Tom Hanks is connected to Gary Sinise by way of them both acting in Apollo 13, then that connection has a path length of 2, and we would consider Gary Sinise to be 1 degree away from Tom Hanks since they both acted in the same movie. */
+
+MATCH (tom:Person {name: 'Tom Hanks'})-[*6]-(x:Person)
+RETURN DISTINCT x.name
+
+/* 6)Update database to reflect new name ("Larry Wachowski") for director "Lana Wachowski". */
+
+MATCH (p:Person {name:'Lana Wachowski'})
+SET p.name = "Larry Wachowski"
+
+/* 7)Create a section of fun movies whose summary contains the keyword "fun" */
+
+Match (p:Person)-[r:REVIEWED]->(m:Movie)
+WHERE r.summary CONTAINS 'Fun' or r.summary CONTAINS 'fun'
+Return m.title
+
+/* 8)List all the release years and count all movies released in that year. */
+
+MATCH(m:Movie)
+RETURN DISTINCT m.released AS year,
+count(m.released) AS number
+ORDER BY number DESC
+
+/* 9)List all the movies whose rating >= 90. */
+
+MATCH (p:Person)-[rel:REVIEWED] -> (m:Movie)
+WHERE rel.rating >= 90
+RETURN m.title AS title , rel.rating AS rating
+ORDER BY rating DESC
+
+/* 10)List the top producers who are most likely to entertain new movies production hint: Producers with most movies produced. */
+
+MATCH (p:Person) -[:PRODUCED] -> (m:Movie)
+RETURN p.name AS Producer,count(m.title) AS number
+ORDER BY number DESC
+
+/* 11)List all the movies along with a number of reviews received. order the results by a number of reviews in descending order. */
+
+MATCH (p:Person) -[rel:REVIEWED] -> (m:Movie)
+RETURN m.title AS title, count(rel.summary) AS review
+ORDER BY review DESC
+
+/* 12)Find the shortest path between movies "The Matrix" and "The Matrix Reloaded". */
+
+MATCH p = shortestPath((m1:Movie)-[*]-(m2:Movie))
+WHERE m1.title = "The Matrix" AND m2.title = "The Matrix Reloaded"
+RETURN p AS path
+
+/* 13)List all the writers and the list of movies they have written. */
+
+MATCH (p:Person) -[:WROTE] -(m:Movie)
+RETURN  p.name AS writer,collect(m.title) AS movie
+
+/* 14)List top 15 actors who have co-acted with each other the most. Ignore The Matrix trilogy for this analysis. */
+
+MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(coActors:Person)
+WHERE NOT m.title IN ['The Matrix', 'The Matrix Reloaded', 'The Matrix Revolutions']
+WITH p, size(collect(DISTINCT coActors.name)) AS coActors
+RETURN p.name AS Actor
+ORDER BY coActors DESC
+LIMIT 15;

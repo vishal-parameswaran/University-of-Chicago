@@ -1,0 +1,48 @@
+library(faraway)
+dataPath<-"C:/Users/yomaa/OneDrive/University of Chicago/Assignment/Statistical Analytics/RCode/Week8/Self"
+coagulation <- read.table(paste(dataPath,'Week8_Test_Sample.csv',sep = '/'), header=TRUE,sep = " ")
+plot(Output~Treatment, data=coagulation, pch=19,col="black")
+summaryByGroup<-aggregate(Output~Treatment,data=coagulation,FUN=summary)
+means<-cbind(Means=summaryByGroup$Output[,4],Sizes=aggregate(Output~Treatment,data=coagulation,FUN=length)$Output)
+rownames(means)<-as.character(summaryByGroup$Treatment)
+means
+Group1.dietA<-subset(coagulation,coagulation$Treatment=="A")
+Group1.dietA
+summary(Group1.dietA)
+mean(Group1.dietA[,1])
+coag.model<-lm(Output~Treatment,data=coagulation)
+modelSummary<-summary(coag.model)
+modelANOVA<-anova(coag.model)
+modelSummary$coefficients
+modelANOVA
+coag<-coagulation
+coag$x1<-coag$Treatment=="B"
+coag$x2<-coag$Treatment=="C"
+coag
+coag.model.full<-lm(coag~x1+x2, data=coag)
+coag.model.null<-lm(coag~1,data=coag)
+anova(coag.model.null,coag.model.full)
+grand.mean<-mean(coagulation$Output)
+create.vector.of.means<-function(my.group.data) {
+  rep(my.group.data[1],my.group.data[2])
+}
+means
+group.mean<-unlist(apply(means,1,create.vector.of.means))
+SST<-sum((coagulation$Output-grand.mean)^2)
+SSE<-sum((coagulation$Output-group.mean)^2)
+SSM<-sum((group.mean-grand.mean)^2)
+SSE
+SSM
+SST
+preddictedSS <- sum(coag.model$fitted.values^2)
+
+anova(coag.model)
+print(paste("Within group sum of squares: ",SSE))
+print(paste("Between groups sum of squares: ",SSM))
+print(paste("Conclusion of utility test: B"))
+print(paste("Sum of squares of predictor for the model testing H0: 'all group mean values equal to zero': ",SSM))
+print(paste("Sum of squares of residual for the model testing H0: 'all group mean values equal to zero': ",SSE))
+print(paste("What i
+> print(paste("What is the conclusion about equality of all group mean values to zero?: B"))
+[1] "What is the conclusion about equality of all group mean values to zero?: B"
+s the conclusion about equality of all group mean values to zero?: B"))

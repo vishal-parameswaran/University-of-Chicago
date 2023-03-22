@@ -1,0 +1,17 @@
+datapath<-"C:/Users/yomaa/OneDrive/University of Chicago/Assignment/Statistical Analytics/RCode/Week7/Self"
+Regression.ANOVA.Data<-read.csv(file=paste(datapath,"Week7_Test_Sample.csv",sep="/"),header=TRUE,sep=" ")
+head(Regression.ANOVA.Data)
+fit.1<-lm(Output~1,data=Regression.ANOVA.Data)
+fit.1.2<-lm(Output~1+Input1,data=Regression.ANOVA.Data)
+fit.1.3<-lm(Output~1+Input2,data=Regression.ANOVA.Data)
+fit.1.2.3<-lm(Output~.,data=Regression.ANOVA.Data)
+anova(fit.1)
+anova(fit.1.2)
+anova(fit.1.3)
+anova(fit.1.2.3)
+anova(fit.1,fit.1.2.3)
+anova(fit.1.2,fit.1.2.3)
+c(anova(fit.1.2)$"Sum Sq",sum(fit.1.2$residuals^2))
+c(anova(fit.1.3)$"Sum Sq",sum(fit.1.3$residuals^2))
+
+c(anova(fit.1,fit.1.2.3)$F[2],summary(fit.1.2.3)$fstatistic[1])

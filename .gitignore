@@ -1,3 +1,2 @@
-
-Activities/DMP Assignment Swathi team/data.csv
-Activities/DMP Assignment Swathi team/test.ipynb
+*.pyc
+.ipynb_checkpoints
