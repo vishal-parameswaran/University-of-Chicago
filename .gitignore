@@ -5,5 +5,12 @@
 *.png
 *.jpg
 *.txt
-*.h5
 *.pdf
+*.bmp
+*.h5
+*.hd5
+*.weights
+Capstone/
+Machine Learning & Predictive Analytics/Assignment 8/
+*.h5
+Machine Learning & Predictive Analytics/Project/Final/best_model_vgg_complex.h5
