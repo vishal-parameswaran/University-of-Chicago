@@ -1,5 +1,5 @@
 ---
-title: "Legacy theming with bslib and thematic"
+title: "ADSP 31006 Time Series Analysis and Forecasting"
 output: 
   html_document:
     code_folding: show
@@ -19,31 +19,185 @@ if (requireNamespace("thematic"))
   thematic::thematic_rmd(font = "auto")
 ```
 
-## R Markdown
+# Assignment #1 - Introduction
+## Vishal Parameswaran
 
-This is an R Markdown document themed with [`{bslib}` package](https://rstudio.github.io/bslib/). `{bslib}` makes it easy to customize the main colors and fonts of a `html_document`, [`flexdashboard::flex_dashboard`](https://flexdashboard-pkg.netlify.app/articles/articles/theme.html), [shiny::fluidPage()](https://shiny.rstudio.com/reference/shiny/latest/fluidPage.html), or more generally any website that uses [Bootstrap](https://getbootstrap.com/) for styling. The `theme` parameter in the yaml front-matter of this Rmd document describes a [`bslib::bs_theme()`](https://rstudio.github.io/bslib/reference/bs_theme.html) object. This particular example uses Bootstrap 3 (`version: 3`), which is primarily for 'legacy' documents that would break with Bootstrap 4 or above.
+### Question 1:
+Suppose:
 
-## Themed Plots {.tabset .tabset-pills}
+  1. $E(X) = 2$
+  2. $Var(X) = 9$ 
+  3. $E(Y) = 0$ 
+  4. $Var(Y) = 4$ 
+  5. $Corr(X,Y) = 0.25$ 
 
-When running this document with [`{thematic}`](https://rstudio.github.io/thematic/) installed, the `thematic::thematic_rmd(font = "auto")` effectively translates `theme` (CSS) settings to new global theming defaults for `{ggplot2}`, `{lattice}`, and `{base}` R graphics:
+Find:
 
-### ggplot2
+  1. $Var(X+Y)$ 
+  2. $Cov(X,X+Y)$ 
+  3. $Corr(X+Y,X-Y)$ 
 
-```{r}
-library(ggplot2)
+ANS:
+Considering:
 
-ggplot(mpg, aes(displ, hwy)) +
-  geom_point() + geom_smooth()
+  1. $E(X) = 2$
+  2. $Var(X) = 9$ 
+  3. $E(Y) = 0$ 
+  4. $Var(Y) = 4$ 
+  5. $Corr(X,Y) = 0.25$ 
+
+  then
+
+  1. $Var(X+Y)$
+  
+  We know that 
+  
+  $Var(X+Y) = Var(X) + Var(Y) + 2Cov(X,Y)$.
+  
+  To solve the equation, we need to solve $Cov(X,Y)$ first. We know that 
+  
+  $Corr(X, Y) = \frac{Cov(X,Y)}{\sqrt{(Var(X) * Var(Y))}}$. 
+  
+  Rearranging for $Cov(X,Y)$ we get 
+  
+  $Cov(X,Y) = Corr(X, Y)\sqrt{(Var(X) * Var(Y))}$. 
+
+  Solving the above equation we get
+
+  $Cov(X,Y) = 0.25*\sqrt{9*4} = 0.25*\sqrt{36} = 0.25*\pm6 = \pm1.5$
+
+  Since the standard deviation cannot be negative, we take the positive value of 1.5. Thus
+  
+  $Cov(X,Y) = 1.5$
+
+  Now we can solve for $Var(X+Y)$.
+
+  $Var(X+Y) = Var(X) + Var(Y) + 2Cov(X,Y)$
+
+  $Var(X+Y) = 9 + 4 + 2*1.5 = 16$
+
+  2. $Cov(X,X+Y)$
+
+  We know that 
+  
+  $Cov(X,X+Y) = Cov(X,X) + Cov(X,Y)$
+  
+  $Cov(X,X+Y) = Var(X) + Cov(X,Y)$
+
+  $Cov(X,X+Y) = 9 + 1.5 = 10.5$
+
+  Thus $Cov(X,X+Y) = 10.5$
+
+  3. $Corr(X+Y,X-Y)$
+
+  We know that
+
+  $Corr(X+Y,X-Y) = \frac{Cov(X+Y,X-Y)}{\sqrt{(Var(X+Y) * Var(X-Y))}}$
+
+  $Var(X+Y) = 16$ (from above)
+
+  $Var(X-Y) = Var(X) + Var(Y) - 2Cov(X,Y)$
+
+  $Var(X-Y) = 9 + 4 - 2*1.5 = 12 - 3 = 9$
+
+  $Cov(X+Y,X-Y) = Cov(X,X-Y) + Cov(Y,X-Y)$
+
+  $Cov(X+Y,X-Y) = Cov(X,X) - Cov(X,Y) + Cov(Y,X) - Cov(Y,Y)$
+
+  $Cov(X+Y,X-Y) = Var(X) - Cov(X,Y) + Cov(Y,X) - Var(Y)$
+
+  $Cov(X+Y,X-Y) = 9 - 1.5 + 1.5 - 4 = 9 - 4 = 5$
+
+  $Corr(X+Y,X-Y) = \frac{5}{\sqrt{(16 * 9)}} = \frac{5}{\sqrt{144}} = \frac{5}{12}$
+
+  $Corr(X+Y,X-Y) = 0.4167$
+
+### Question 2:
+If $X$ and $Y$ are dependent but $Var(X) = Var(Y)$ Find $Cov(X+Y,X-Y)$
+
+Ans:
+  We know that $X$ and $Y$ are dependent and $Var(X) = Var(Y)$
+
+  $Cov(X+Y,X-Y) = Cov(X,X-Y) + Cov(Y,X-Y)$
+
+  $Cov(X+Y,X-Y) = Cov(X,X) - Cov(X,Y) + Cov(Y,X) - Cov(Y,Y)$
+
+  $Cov(X+Y,X-Y) = Var(X) - Cov(X,Y) + Cov(Y,X) - Var(Y)$
+
+  substituting $Var(X) = Var(Y)$ and $Cov(X,Y) = Cov(Y,X)$
+  
+  $Cov(X+Y,X-Y) = Var(X) - Cov(X,Y) + Cov(X,Y) - Var(X)$
+
+  $Cov(X+Y,X-Y) = Var(X) - Var(X)$
+
+  $Cov(X+Y,X-Y) = 0$
+
+### Question 3:
+Suppose $Y_{t} = 5 + 2t + X_{t}$ where $X_{t}$ is a zero-mean stationary series with autocovariance function $\gamma_{k}$.
+
+a. Find the mean function for $\{Y_{t}\}.$
+b. Find the autocovariance function for $\{Y_{t}\}.$
+c. Is $\{Y_{t}\}$ stationary? Why or why not?
+
+Ans:
+
+  We know that $Y_{t} = 5 + 2t + X_{t}$ where $X_{t}$ is a zero-mean stationary series with autocovariance function $\gamma_{k}$.
+  
+  Therefore $E(X_{t}) = 0$
+
+  The mean function can be calculated as follows:
+
+  $\mu_{Y} = E(Y) = \int_{-\infty}^{\infty}Yf(Y)dY$
+  
+  $\mu_{Y} = E(5 + 2t + X_{t}) = 5 + 2t + E(X_{t}) = 5 + 2t + 0 = 5 + 2t$
+  
+  Which is not constant over time.
+
+  The autocovariance function of $Y_{t}$ over time $k$ can be calculated as follows:
+  $Cov(Y_{t}, Y_{t-k}) = Cov(5 + 2t + X_{t}, 5 + 2(t-k) + X_{t-k})$
+
+  $Cov(5 + 2t + X_{t}, 5 + 2(t-k) + X_{t-k}) = Cov(X_{t}, X_{t-k})$
+
+  $Cov(X_{t}, X_{t-k}) = \gamma_{k}$
+
+  Therefore the autocovariance function of $Y_{t}$ over time $k$ is $\gamma_{k}$
+
+  $\{Y_{t}\}$ is not stationary because the mean function is not constant over time.
+
+
+### Question 4:
+The following time plots and ACF plots correspond to three different time series. Your task is to match each time plot in the first row with one of the ACF plots in the second row.
+
+ANS:
+  I would match 
+  
+  (1) monthly accidental rate (1) with ACF plot (a) as the time series plot shows a very consistent seasonal pattern with a period of 12 months. The ACF plot shows the seasonality in its sticky nature.
+
+  (2) monthly air passengers (2) with (c) as the time series plot shows a very clear trend line, which is displayed in the ACF plot with a very slow decay curve to 0.
+
+  (3) Annual mink trappings (3) with (b) as the time series plot shows a not so clear seasonal pattern, which displays some deviation from the seasonal movements. The ACF plot shows this with the lines not being very sticky, and also changing direction abruptly.
+
+
+### Question 5:
+Simulate a normal white noise sample of size 10 with the mean 2.3 and standard deviation 1.2, and then 
+calculate the sample mean and sample standard deviation. Are you satisfied with your computed
+results? How about the sample size 10,000?
+
+```{r, fig.showtext=TRUE}
+
+
 ```
 
-### lattice
+### Question 6:
+R comes with two time series that are already R's `ts()` class: AirPassengers and JohnsonJohnson. 
 
-```{r}
-lattice::show.settings()
-```
+a. What is each of those time series reporting?
+b. Find the start date, the end date and frequency of each of the time series. 
+c. Plot separate time plots of the two time series. Describe what the time plots tell us about the time series and compare the two plots. What are the main features of each of the time series?
+d. Plot the seasonal box plots of the two time series and describe what those plots are conveying 
+about the time series.
 
-### base
 
-```{r}
+```{r, fig.showtext=TRUE}
 plot(pressure, col = thematic::thematic_get_option("accent"))
 ```
