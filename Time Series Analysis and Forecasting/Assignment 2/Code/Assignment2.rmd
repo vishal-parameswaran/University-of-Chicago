@@ -1,0 +1,158 @@
+---
+title: "ADSP 31006 Time Series Analysis and Forecasting"
+output: 
+  html_document:
+    code_folding: show
+    theme:
+      bg: "#202123"
+      fg: "#B8BCC2"
+      primary: "#EA80FC"
+      base_font:
+        google: Prompt
+      heading_font:
+        google: Proza Libre
+      version: 3
+    toc: true
+    toc_float: true
+    smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+if (requireNamespace("thematic"))
+  thematic::thematic_rmd(font = "auto")
+
+library(ggplot2)
+library(tsibble)
+library(feasts)
+library(forecast)
+library(fpp)
+library(tseries)
+```
+
+# Assignment #2 - Time Series Decomposition
+## Vishal Parameswaran
+
+### Question 1:
+
+Load the visitors.rda dataset, make a time plot of your data and describe the main features of 
+the series.
+
+Ans:
+
+```{r}
+load(file = "../Data/visitors.rda")
+
+autoplot(visitors)
+
+visitors_ts_obj <- ts(visitors$Arrivals, frequency = 4, start = c(1981, 1))
+```
+ 
+    * The plot shows that the data is seasonal and has a trend. 
+    * The data is also non-stationary as the mean and variance are not constant over time. 
+    * The data also has a cycle of every 10 years, where the frequency of increases dramatically.
+    * The data is multiplicative as the seasonal variation is not constant over time due to the cycle.
+
+### Question 2:
+What is the appropriate Holt-Winters method for this data set (multiplicative / additive)? why?
+
+Ans:
+The appropriate Holt-Winters method for this data set is multiplicative as the seasonal variation is not constant over time.
+
+
+### Question 3:
+Use the hw() function to forecast the next 20 quarters using Holt-Winters’ methods. 
+Experiment with the following methods
+    
+    * Linear trend with additive seasonality
+    * Linear trend with multiplicative seasonality
+    * Linear trend with additive seasonality and damping
+    * Linear trend with multiplicative seasonality and damping
+
+Ans:
+
+
+```{r}
+# Linear trend with additive seasonality
+hw_add <- hw(visitors_ts_obj, h = 20, seasonal = "additive")
+autoplot(hw_add)
+```
+As we can see, a non damped additive model is not appropriate for this data set as the seasonal variation is constant over time. The model is also not able to capture the cycle of every 10 years. The acf
+```{r}
+# Linear trend with multiplicative seasonality
+hw_mul <- hw(visitors_ts_obj, h = 20, seasonal = "multiplicative")
+autoplot(hw_mul)
+```
+The model seems to be very simillar to the additive model, with higher fluctuations. The cycle observations are not fluctuations upon an axis, but rather just a general increase in frequency. The model is not able to capture this feature, and the error bands are very large.
+
+```{r}
+# Linear trend with additive seasonality and damping
+hw_add_damp <- hw(visitors_ts_obj, h = 20, seasonal = "additive", damped = TRUE)
+autoplot(hw_add_damp)
+```
+The model performs worse than the above models as it us not able to predict the general trend increase and is instead showing a flat trend. The seasonalitry is also not represented well as the model actually has a very spiky seasonality, but the forecast is showing a very smooth seasonality. The error bands are also trending downwards, which is not a good sign.
+```{r}
+# Linear trend with multiplicative seasonality and damping
+hw_mul_damp <- hw(visitors_ts_obj, h = 20, seasonal = "multiplicative", damped = TRUE) #nolint
+autoplot(hw_mul_damp)
+```
+This model seems to have the largest error bands, and makes the same mistake as the previous forecast, having a very smooth seasonality. The model is also not able to capture the cycle of every 10 years.
+
+
+### Question 4:
+Use the accuracy() function to compare the Root-Mean-Square-Error (RMSE) values of the 
+forecasts from the various methods. Which do you prefer and why?
+
+Ans:
+
+```{r}
+accuracy(hw_add)[, "RMSE"]
+accuracy(hw_mul)[, "RMSE"]
+accuracy(hw_add_damp)[, "RMSE"]
+accuracy(hw_mul_damp)[, "RMSE"]
+```
+
+Looking at the above rmse values, the best model is the multiplicative model with damping as it has the lowest RMSE. This makes sense as the model was tapering off towards the end towards a flat trend line, but the normal models were predicting an ever increase in trend. This is where damping models are strong as they eventually taper off the trend increase, bringing it closer to the mean. But it does seem that the damped model is maybe too flat in the predicted trend line.
+
+### Question 5:
+Use the checkresiduals() function to check that the residuals from the best model look like 
+white noise and provide a summary of the model’s smoothing parameters using the summary() 
+function.
+
+Ans:
+
+```{r}
+checkresiduals(hw_mul_damp)
+```
+From the above plots, the residuals are clearly not white noise, and the acf plots have significant spikes at 4,5,16 lags that exceed the p value. But the Ljung-Box test does show a low p-value of 0.005064. 
+
+```{r}
+summary(hw_mul_damp)
+```
+
+The summary shows that the $\beta$ and $\gamma$ values are not close to 1, while the $\phi$ value is very close to 1 and the $\alpha$ value is in the middle, but close to 1.
+
+The $\alpha$ value in smoothing is responsible for the level, and the $\beta$ value is responsible for the trend smoothing. The $\gamma$ value is responsible for the seasonality, and the phi value is responsible for the dampening.
+
+The $\alpha$ value represents the level, i.e how far back should the model go when considering the data. An $\alpha$ value of close to 0 gives more weight to observations from the distant past, thus the model is slower to change. Conversely a value of close to 1 gives more weight to recent observations, thus the model is faster to change. From our model, we can see that the $\alpha$ value is not very close to either 0 or 1 at 0.52, so we can infer that the model is not very fast to change, nor very slow either.
+
+The $\beta$ value represents the trend, i.e how much weight should be given to recent trend changes. A value of close to 0 gives more weight to the distant past, thus the model is slower to change. Conversely a value of close to 1 gives more weight to recent trend changes, thus the model is faster to change. With a value of 0.0027, we can see that the model is very slow to change, and is giving more weight to long term trends.
+
+The $\gamma$ value represents the seasonality, i.e how much weight should be given to recent seasonal changes. A value of close to 0 gives more weight to the distant past, thus with a $\gamma$ of $0.00004$ the model captures more long term seasonality and less from the more recent past. 
+
+The $\phi$ value represents the dampening. Damped Trend Methods are a solution that implements a parameter that dampens the trend line into a flat line, some time into the future. With a $\phi$ value of 0.98, we can see that the model has very little dampening, as it has the minimum amount of dampening. This makes sense, as the model is not very close to a flat line, and is still increasing, but at a very slow rate.
+
+
+### Question 6:
+Use the snaive() function to forecast the next 20 quarters, and the accuracy() function to 
+evaluate the model. Did your best model beat the seasonal naïve approach?
+
+Ans:
+
+```{r}
+snaive_model <- snaive(visitors_ts_obj, h = 20)
+autoplot(snaive_model)
+checkresiduals(snaive_model)
+accuracy(snaive_model)[, "RMSE"]
+```
+
+From the above plots, we can clearly see that the acf plots are showing seasonality at lags 1,2.The distribution is not normal as well, and the residuals are not really centered on the mean and seasonality is visuble. While the p value is low, the RMSE is much higher than the best model we found above. So the best model is still the multiplicative model with damping.

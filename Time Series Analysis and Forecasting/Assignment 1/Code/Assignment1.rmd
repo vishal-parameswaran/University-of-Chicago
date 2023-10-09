@@ -12,11 +12,18 @@ output:
       heading_font:
         google: Proza Libre
       version: 3
+    toc: true
+    toc_float: true
+    smooth_scroll: true
 ---
 
 ```{r setup, include=FALSE}
 if (requireNamespace("thematic")) 
   thematic::thematic_rmd(font = "auto")
+
+library(ggplot2)
+library(ggfortify)
+library(forecast)
 ```
 
 # Assignment #1 - Introduction
@@ -48,7 +55,9 @@ Considering:
 
   then
 
-  1. $Var(X+Y)$
+---
+
+#### 1. $Var(X+Y)$
   
   We know that 
   
@@ -74,9 +83,13 @@ Considering:
 
   $Var(X+Y) = Var(X) + Var(Y) + 2Cov(X,Y)$
 
-  $Var(X+Y) = 9 + 4 + 2*1.5 = 16$
+Therefore
 
-  2. $Cov(X,X+Y)$
+$Var(X+Y) = 9 + 4 + 2*1.5 = 16$
+
+---
+
+#### 2. $Cov(X,X+Y)$
 
   We know that 
   
@@ -88,7 +101,9 @@ Considering:
 
   Thus $Cov(X,X+Y) = 10.5$
 
-  3. $Corr(X+Y,X-Y)$
+---
+
+#### 3. $Corr(X+Y,X-Y)$
 
   We know that
 
@@ -98,7 +113,7 @@ Considering:
 
   $Var(X-Y) = Var(X) + Var(Y) - 2Cov(X,Y)$
 
-  $Var(X-Y) = 9 + 4 - 2*1.5 = 12 - 3 = 9$
+  $Var(X-Y) = 9 + 4 - 2*1.5 = 12 - 3 = 10$
 
   $Cov(X+Y,X-Y) = Cov(X,X-Y) + Cov(Y,X-Y)$
 
@@ -108,14 +123,19 @@ Considering:
 
   $Cov(X+Y,X-Y) = 9 - 1.5 + 1.5 - 4 = 9 - 4 = 5$
 
-  $Corr(X+Y,X-Y) = \frac{5}{\sqrt{(16 * 9)}} = \frac{5}{\sqrt{144}} = \frac{5}{12}$
+  $Corr(X+Y,X-Y) = \frac{5}{\sqrt{(16 * 10)}} = \frac{5}{\sqrt{160}}$
 
-  $Corr(X+Y,X-Y) = 0.4167$
+  $Corr(X+Y,X-Y) = 0.3953$
+
+---
 
 ### Question 2:
 If $X$ and $Y$ are dependent but $Var(X) = Var(Y)$ Find $Cov(X+Y,X-Y)$
 
 Ans:
+
+---
+
   We know that $X$ and $Y$ are dependent and $Var(X) = Var(Y)$
 
   $Cov(X+Y,X-Y) = Cov(X,X-Y) + Cov(Y,X-Y)$
@@ -132,6 +152,9 @@ Ans:
 
   $Cov(X+Y,X-Y) = 0$
 
+---
+
+
 ### Question 3:
 Suppose $Y_{t} = 5 + 2t + X_{t}$ where $X_{t}$ is a zero-mean stationary series with autocovariance function $\gamma_{k}$.
 
@@ -140,6 +163,8 @@ b. Find the autocovariance function for $\{Y_{t}\}.$
 c. Is $\{Y_{t}\}$ stationary? Why or why not?
 
 Ans:
+
+---
 
   We know that $Y_{t} = 5 + 2t + X_{t}$ where $X_{t}$ is a zero-mean stationary series with autocovariance function $\gamma_{k}$.
   
@@ -150,25 +175,35 @@ Ans:
   $\mu_{Y} = E(Y) = \int_{-\infty}^{\infty}Yf(Y)dY$
   
   $\mu_{Y} = E(5 + 2t + X_{t}) = 5 + 2t + E(X_{t}) = 5 + 2t + 0 = 5 + 2t$
-  
-  Which is not constant over time.
+
+  Which is not constant over time as it is dependent on time $t$.
+
+---
 
   The autocovariance function of $Y_{t}$ over time $k$ can be calculated as follows:
-  $Cov(Y_{t}, Y_{t-k}) = Cov(5 + 2t + X_{t}, 5 + 2(t-k) + X_{t-k})$
+  $Cov(Y_{t}, Y_{t-k}) = Cov(5 + 2t + X_{t}, 5 + 2(t-k) + X_{t-k})$ :  Expanding on $Y_{t}$
 
-  $Cov(5 + 2t + X_{t}, 5 + 2(t-k) + X_{t-k}) = Cov(X_{t}, X_{t-k})$
+  $Cov(5 + 2t + X_{t}, 5 + 2(t-k) + X_{t-k}) = Cov(X_{t}, X_{t-k})$ : Covariance of constants is 0
 
   $Cov(X_{t}, X_{t-k}) = \gamma_{k}$
 
   Therefore the autocovariance function of $Y_{t}$ over time $k$ is $\gamma_{k}$
 
-  $\{Y_{t}\}$ is not stationary because the mean function is not constant over time.
 
+---
+
+
+  $\{Y_{t}\}$ is not stationary because the mean function $E(Y_{T}) = 5 + 2t$ is not constant over time.
+
+---
 
 ### Question 4:
 The following time plots and ACF plots correspond to three different time series. Your task is to match each time plot in the first row with one of the ACF plots in the second row.
 
 ANS:
+
+---
+
   I would match 
   
   (1) monthly accidental rate (1) with ACF plot (a) as the time series plot shows a very consistent seasonal pattern with a period of 12 months. The ACF plot shows the seasonality in its sticky nature.
@@ -177,16 +212,66 @@ ANS:
 
   (3) Annual mink trappings (3) with (b) as the time series plot shows a not so clear seasonal pattern, which displays some deviation from the seasonal movements. The ACF plot shows this with the lines not being very sticky, and also changing direction abruptly.
 
+---
+
 
 ### Question 5:
 Simulate a normal white noise sample of size 10 with the mean 2.3 and standard deviation 1.2, and then 
 calculate the sample mean and sample standard deviation. Are you satisfied with your computed
 results? How about the sample size 10,000?
 
+Ans:
+
+---
+
+Lets simulate a white noise sample of size 10 with the mean 2.3 and standard deviation 1.2. We know what to satisfy the conditions of being white noise
+
+1.  for all $t$, $E(W_{t}) = μ$ is a constant;
+2.  for all $t$, $Var(W_{t}) = \sigma^{2}$ ; w is a constant
+3.  it is uncorrelated at different time points, that is, when $t = s$, $Cov(W_{t}, W_{s}) = 0$.
+
 ```{r, fig.showtext=TRUE}
-
-
+set.seed(30)
+size <- 10
+mean_data <- 2.3
+sd_data <- 1.2
+y <- ts(rnorm(size, mean_data, sd_data))
+autoplot(y) + ggtitle("White Noise Sample of Size 10") + xlab("Time") + ylab("y") # nolint
 ```
+
+The sample mean and sample standard deviation can be calculated as follows:
+  
+```{r, fig.showtext=TRUE}
+sample_mean <- mean(y)
+sample_sd <- sd(y)
+```
+```{r, fig.showtext=TRUE}
+sample_mean
+sample_sd
+```
+
+The sample does not seem to show white noise due to the lack of plot points in the data. Thus the sample mean is unable to reach the population mean. Its the same when we consider the standard deviation as well. Maybe simulating more points will help.
+
+```{r, fig.showtext=TRUE}
+set.seed(30)
+size <- 10000
+mean <- 2.3
+sd <- 1.2
+y <- ts(rnorm(size, mean, sd))
+autoplot(y) + ggtitle("White Noise Sample of Size 10000") + xlab("Time") + ylab("y") # nolint
+```
+```{r, fig.showtext=TRUE}
+sample_mean <- mean(y)
+sample_sd <- sd(y)
+```
+```{r, fig.showtext=TRUE}
+sample_mean
+sample_sd
+```
+
+With a larger number of plot points, we are able to see a more accurate representation of white noise. The sample mean is closer to the population mean and the sample deviation is closer to the population standard deviation. 
+
+---
 
 ### Question 6:
 R comes with two time series that are already R's `ts()` class: AirPassengers and JohnsonJohnson. 
@@ -197,7 +282,74 @@ c. Plot separate time plots of the two time series. Describe what the time plots
 d. Plot the seasonal box plots of the two time series and describe what those plots are conveying 
 about the time series.
 
+Ans:
+
+---
+
+a.  The `AirPassengers` time series reports the monthly totals of international airline passengers from 1949 to 1960. 
+
+The `JohnsonJohnson` time series reports the quarterly earnings per Johnson & Johnson share from 1960 to 1980.
+
+---
+
+b. The start date, end date and frequency of each of the time series can be found as follows:
+
+#### AirPassengers
+```{r, fig.showtext=TRUE}
+ts(AirPassengers)
+start(AirPassengers)
+end(AirPassengers)
+frequency(AirPassengers)
+```
+#### JohnsonJohnson
+```{r, fig.showtext=TRUE}
+ts(JohnsonJohnson)
+start(JohnsonJohnson)
+end(JohnsonJohnson)
+frequency(JohnsonJohnson)
+```
+
+---
+
+c. The time plots of the two time series can be plotted as follows:
 
 ```{r, fig.showtext=TRUE}
-plot(pressure, col = thematic::thematic_get_option("accent"))
+autoplot(AirPassengers) + ggtitle("AirPassengers") + xlab("Time") + ylab("Passengers") # nolint
 ```
+
+```{r, fig.showtext=TRUE}
+autoplot(JohnsonJohnson) + ggtitle("JohnsonJohnson") + xlab("Time") + ylab("Earnings") # nolint
+
+```
+
+From the above plot we can clearly see that seasonality and trend are present in the data. The trend is increasing over time and the seasonality is sticky. The data is not stationary as the mean is not constant over time. The  `AirPassengers` dataset has more spiky seasonality than the `JohnsonJohnson` dataset. The `AirPassengers` dataset has a more linear trend than the `JohnsonJohnson` dataset. Moreover the `JohnsonJohnson` dataset does not start out with a clear seasonality, but develops it over time as the data progresses.
+
+
+
+---
+
+d. The seasonal box plots of the two time series can be plotted as follows:
+
+```{r, fig.showtext=TRUE}
+season <- cycle(AirPassengers)
+season.factor <- factor(season)
+ggplot(AirPassengers, aes(x = season.factor,
+                             y = AirPassengers,
+                             fill = season.factor)) +
+  geom_boxplot() +
+  labs(x = "Month", y =  "Passengers")
+```
+
+```{r, fig.showtext=TRUE}
+seasonJ <- cycle(JohnsonJohnson)
+seasonJ.factor <- factor(seasonJ)
+ggplot(JohnsonJohnson, aes(x = seasonJ.factor,
+                             y = JohnsonJohnson,
+                             fill = seasonJ.factor)) +
+  geom_boxplot() +
+  labs(x = "Month", y =  "Earnings")
+``` 
+
+Looking at the seasonal box plots, we can see that seasonality exists, as the means for each season are clustered towards the middle of each season. The `AirPassengers` dataset shows a greater degree of  seasonality as there is a clear variation across seasons. In the `JohnsonJohnson` dataset, the seasonality is not as clear as the frequency is lower. Looking at both the Time Series plot and the seasonality box plot for the `JohnsonJohnson` dataset we can see that the seasonality is across a year and not a quarter. This is because the data is quarterly and not monthly.
+
+---
