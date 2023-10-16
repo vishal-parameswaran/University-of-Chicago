@@ -1,0 +1,139 @@
+---
+title: "ADSP 31006 Time Series Analysis and Forecasting"
+output: 
+  html_document:
+    code_folding: show
+    theme:
+      bg: "#202123"
+      fg: "#B8BCC2"
+      primary: "#EA80FC"
+      base_font:
+        google: Prompt
+      heading_font:
+        google: Proza Libre
+      version: 3
+    toc: true
+    toc_float: true
+    smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+if (requireNamespace("thematic"))
+  thematic::thematic_rmd(font = "auto")
+
+library(ggplot2)
+library(TSA)
+library(feasts)
+library(forecast)
+library(fpp)
+library(tseries)
+```
+
+# Assignment #4 - ARIMA
+## Vishal Parameswaran
+
+### Question 1:
+
+Load the usgdp.rda dataset and split it into a training dataset (1960 - 2012) and a test dataset (2013 - 2017)
+
+Ans:
+```{r}
+load("usgdp.rda")
+
+gdp <- ts(usgdp$GDP, start = 1960, frequency = 1)
+
+autoplot(gdp) +
+                xlab("Year") +
+                ylab("GDP (Billions of Dollars)") +
+                ggtitle("US GDP from 1947 to 2017")
+
+```
+
+```{r}
+train <- window(gdp, start = 1960, end = 2012)
+autoplot(train)
+```
+
+```{r}
+test <- window(gdp, start = 2013)
+autoplot(test)
+```
+
+### Question 2:
+Plot the training dataset. Is the Box-Cox transformation necessary for this data? Why?
+
+Ans:
+```{r}
+autoplot(train)
+```
+To find if box cox transformation is necessary we should first find the lambda value.
+  
+```{r}
+lambda <- BoxCox.lambda(train)
+lambda
+```
+As the lambda value is not 1, we should use box cox transformation.
+
+```{r}
+train_bc <- BoxCox(train, lambda = lambda)
+autoplot(train_bc)
+```
+
+### Question 3:
+Plot the 1st and 2nd order difference of the data. Apply KPSS Test for Stationarity to determine which difference order results in a stationary dataset.
+
+Ans:
+
+```{r}
+train_diff1 <- diff(train_bc, differences = 1)
+train_diff2 <- diff(train_bc, differences = 2)
+
+autoplot(train_diff1) + ggtitle("Difference of 1")
+autoplot(train_diff2) + ggtitle("Difference of 2")
+```
+from the above plots we can observe that the second plot alone looks stationary. Lets use the KPSS test to confirm this.
+
+```{r}
+kpss.test(train_diff1)
+kpss.test(train_diff2)
+```
+
+Based on the KPSS result, its evident that both the difference of 1 and 2 are stationary. But we will use the difference of 2 as it is more stationary than the difference of 1.
+
+
+### Question 4:
+Plot the 1st and 2nd order difference of the data. Apply KPSS Test for Stationarity to determine which difference order results in a stationary dataset.
+
+Ans:
+
+
+
+### Question 5:
+Compute the sample Extended ACF (EACF) and use the Arima() function to try some other plausible models by experimenting with the orders chosen. Limit your models to 𝑞, 𝑝 ≤ 2 and 𝑑 ≤ 2. Use the model summary() function to compare the Corrected Akaike information criterion (i.e., AICc) values (Note: Smaller values indicated better models).
+
+
+Ans:
+
+### Question 6:
+Use the model chosen in Question 4 to forecast and plot the GDP forecasts with 80 and 95 % confidence levels for 2013 - 2017 (Test Period).
+
+
+Ans:
+
+
+### Question 7:
+Compare your forecasts with the actual values using error = actual - estimate and plot the errors. (Note: Use the forecast $mean element for the forecast estimate)
+
+
+Ans:
+
+### Question 6:
+Calculate the sum of squared errors.
+
+
+Ans:
+
+### Question 6:
+Use the naive() function to forecast for 2013 - 2017 (Test Period.) Did your best model beat the naïve approach
+
+Ans:
