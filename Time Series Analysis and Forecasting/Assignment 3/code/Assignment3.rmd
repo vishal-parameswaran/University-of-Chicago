@@ -102,38 +102,159 @@ Based on the KPSS result, its evident that both the difference of 1 and 2 are st
 
 
 ### Question 4:
-Plot the 1st and 2nd order difference of the data. Apply KPSS Test for Stationarity to determine which difference order results in a stationary dataset.
+Fit a suitable ARIMA model to the training dataset using the auto.arima() function. Remember 
+to transform the data first, if necessary, by setting the 𝑙𝑎𝑚𝑏𝑑𝑎 argument. Report the resulting
+$p$, $d$, $q$ and the coefficients values.
 
 Ans:
 
+#### ARIMA with lambda set.
+```{r}
+#fitting an arima model
+arima_lambda <- auto.arima(train, seasonal = FALSE, lambda = lambda ) #nolint
+checkresiduals(arima_lambda)
+arima_lambda
+```
 
+#### ARIMA with box cox transformation
+```{r}
+#fitting an arima model
+arima_bc <- auto.arima(train_bc, seasonal = FALSE) #nolint
+checkresiduals(arima_bc)
+arima_bc
+```
+
+#### ARIMA with box cox transformation and second order difference
+```{r}
+#fitting an arima model
+arima_bc_2 <- auto.arima(train_bc, seasonal = FALSE,d=2) #nolint
+checkresiduals(arima_bc_2)
+arima_bc_2
+```
+
+
+We can see that the ARIMA(0,2,2) model has a lower AIC, BIC and AICc values compared to the ARIMA(1,1,0) model. This indicates a better goodness of fit. The coefficients of the ARIMA(0,2,2) model are as follows:
+$p=0, d=2, q=2$
+```{r}
+arima_bc_2$coef
+```
 
 ### Question 5:
 Compute the sample Extended ACF (EACF) and use the Arima() function to try some other plausible models by experimenting with the orders chosen. Limit your models to 𝑞, 𝑝 ≤ 2 and 𝑑 ≤ 2. Use the model summary() function to compare the Corrected Akaike information criterion (i.e., AICc) values (Note: Smaller values indicated better models).
 
-
 Ans:
+
+#### No Differencing
+```{r}
+eacf(train_bc, ar.max = 2, ma.max = 2)
+```
+When using the EACF table, the aim is to use the corners to calculate the ARIMA values. As I is always 0 for no differencing, the AR/MA combinations are ARIMA(2,0,0), ARIMA(1,0,1), ARIMA(1,0,2) and ARIMA(2,0,2).
+
+```{r}
+summary(Arima(train_bc, order = c(2, 0, 0)))$aicc
+summary(Arima(train_bc, order = c(2, 0, 2)))$aicc
+summary(Arima(train_bc, order = c(1, 0, 2)))$aicc
+summary(Arima(train_bc, order = c(1, 0, 1)))$aicc
+```
+
+#### First order differencing
+```{r}
+eacf(diff(train_bc), ar.max = 2, ma.max = 2)
+```
+As I is always 1 for first order differencing, the AR/MA combinations are ARIMA(1,1,0), ARIMA(1,1,1), ARIMA(1,1,2) and ARIMA(2,1,1). The other values are not taken as they are not corners.
+```{r}
+summary(Arima(train_bc, order = c(1, 1, 0)))$aicc
+summary(Arima(train_bc, order = c(1, 1, 1)))$aicc
+summary(Arima(train_bc, order = c(1, 1, 2)))$aicc
+summary(Arima(train_bc, order = c(2, 1, 1)))$aicc
+```
+
+#### Second order differencing
+```{r}
+eacf(diff(train_bc, differences = 2), ar.max = 2, ma.max = 2)
+```
+As I is always 1 for first order differencing, the AR/MA combinations are ARIMA(0,2,0), ARIMA(0,2,1), ARIMA(0,2,2),ARIMA(1,2,1) and ARIMA(2,2,1). The other values are not taken as they are not corners.
+```{r}
+summary(Arima(train_bc, order = c(0, 2, 0)))$aicc
+summary(Arima(train_bc, order = c(0, 2, 1)))$aicc
+summary(Arima(train_bc, order = c(0, 2, 2)))$aicc
+summary(Arima(train_bc, order = c(1, 2, 1)))$aicc
+```
+
+As we can see, the values for ARIMA(0,2,2) is the lowest. This is the same as the model we got from the auto.arima() function.
 
 ### Question 6:
 Use the model chosen in Question 4 to forecast and plot the GDP forecasts with 80 and 95 % confidence levels for 2013 - 2017 (Test Period).
 
-
 Ans:
+The forecasting period is 5 years. So we set h = 5.
+```{r}
+forecasted <- forecast(arima_bc_2, h = 5, level = c(80, 95))
 
+autoplot(forecasted) +
+                xlab("Year") +
+                ylab("GDP (Billions of Dollars)") +
+                ggtitle("Forecasted US GDP from 2013 to 2017")
+```
 
 ### Question 7:
 Compare your forecasts with the actual values using error = actual - estimate and plot the errors. (Note: Use the forecast $mean element for the forecast estimate)
 
-
 Ans:
 
-### Question 6:
+```{r}
+
+estimated <- InvBoxCox(forecasted$mean, lambda = lambda)
+
+error_values <- test - estimated
+autoplot(error_values) +
+                xlab("Year") +
+                ylab("GDP (Billions of Dollars)") +
+                ggtitle("Error of Forecasted US GDP from 2013 to 2017 for the ARIMA model") #nolint
+```
+
+
+### Question 8:
 Calculate the sum of squared errors.
 
-
 Ans:
+The sum of squared errors is calculated as follows:
+```{r}
+sse_bc <- sum(error_values^2)
+sse_bc
+```
 
-### Question 6:
+### Question 9:
 Use the naive() function to forecast for 2013 - 2017 (Test Period.) Did your best model beat the naïve approach
 
 Ans:
+
+```{r}
+naive_train_model <- naive(train)
+naive_forecast <- forecast(naive_train_model, h = 5)
+naive_estimates <- naive_forecast$mean
+naive_error_values <- test - naive_estimates
+
+autoplot(naive_error_values) +
+                xlab("Year") +
+                ylab("GDP (Billions of Dollars)") +
+                ggtitle("Error of Forecasted US GDP from 2013 to 2017 for the naive model") #nolint
+```
+
+```{r}
+sse_naive <- sum(naive_error_values^2)
+sse_naive
+```
+
+Lets take a look at what model has the lower SSE:
+
+```{r}
+if (sse_bc < sse_naive) {
+  print("The ARIMA model has a lower SSE than the naive model")
+}else if (sse_bc == sse_naive) {
+   print("The ARIMA model has the same SSE as the naive model")
+}else {
+  print("The naive model has a lower SSE than the ARIMA model")
+}
+```
+Thus we can see that our model beat the naive approach.
