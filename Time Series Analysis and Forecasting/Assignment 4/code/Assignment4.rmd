@@ -1,0 +1,213 @@
+---
+title: "ADSP 31006 Time Series Analysis and Forecasting"
+output: 
+  html_document:
+    code_folding: show
+    theme:
+      bg: "#202123"
+      fg: "#B8BCC2"
+      primary: "#EA80FC"
+      base_font:
+        google: Prompt
+      heading_font:
+        google: Proza Libre
+      version: 3
+    toc: true
+    toc_float: true
+    smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+if (requireNamespace("thematic"))
+  thematic::thematic_rmd(font = "auto")
+
+library(ggplot2)
+library(TSA)
+library(feasts)
+library(forecast)
+library(fpp)
+library(tseries)
+library(readxl)
+library(dplyr)
+```
+
+# Assignment #4 - ARIMA and SARIMA
+## Vishal Parameswaran
+
+### Question 1:
+Combine the data from the 16 files into a single dataset and plot it. Describe the dataset characteristics.
+
+Ans:
+```{r message=FALSE, warning=FALSE}
+traffic_df <- data.frame()
+data_path = "/data/"
+for (file_name in list.files(path=paste(getwd(), data_path, sep=""))) {
+  file_path <- paste(getwd(), data_path, file_name, sep="")
+  df <- read_excel(file_path)
+  traffic_df <- bind_rows(traffic_df, df %>% slice(5:28) %>% select(c(3,5)))
+}
+
+traffic_ts <- ts(data = as.numeric(traffic_df[, 2]),  frequency = 1)
+tsdisplay(traffic_ts)
+```
+We can see strong seasonality in the data. The data is also non-stationary as the variance are not constant over time. There is no trend in the data as the mean is constant over time. The ACF plot shows that there is no trend as the data is not slowly moving towards 0, instead it is fluctuating around the mean, indicating a strong seasonality. The PACF shows a high correlation at the first 2 lags.
+
+
+### Question 2:
+Split the dataset into a training dataset which includes 6/16/2013 - 6/30/2013 samples and a test dataset which includes 7/1/2013 samples and plot the ACF and PACF.
+
+Ans:
+
+```{r}
+traffic_train <- window(traffic_ts, end = 360) # start date of the dataset is 6/16/2013 and between 6/16/2013 and 6/30/2013 there are 15 days and each day has 24 hours so 15*24 = 360 
+traffic_test <- window(traffic_ts, start = 361) # start from the end of the previous window
+
+tsdisplay(traffic_train) # can use individual plots as well, the tsdisplay function is a more compact way of plotting the ACF and PACF
+
+tsdisplay(traffic_test)# can use individual plots as well, the tsdisplay function is a more compact way of plotting the ACF and PACF
+```
+Considering that the train and test datasets are just subsets of the previous dataset, they should show similar characteristics. The train data as it contains the bulk of the data shows the characteristics of the parent dataset. The test dataset does show a sinusoidal pattern as well, and the PACF plot shows a high correlation at the first 4 lags.  
+
+### Question 3:
+Build an $ARIMA(p, d, q)$ model using the training dataset and R auto.arima() function. Change the values of $p$ and $q$ and determine the best model using AICc and BIC values. Do AICc and BICselect the same model as the best model? For each derived model, review the residual plots for the residuals ACF and normality.
+
+Ans:
+Lets test for stationarity:
+
+```{r}
+kpss.test(traffic_train)
+```
+since the p value is >0.1 we can conclude that the data is null stationarity.
+
+Lets use auto arima to find the best model:
+
+```{r}
+best_model <- auto.arima(traffic_train)
+best_model
+checkresiduals(best_model)
+```
+Given that the p-value in this scenario is 0.001415, which is below the chosen significance level, it leads us to reject the null hypothesis, indicating the presence of significant residual autocorrelation within the ARIMA(2,0,3) model.
+
+Lets try to find a better model by changing the values of p and q:
+
+```{r}
+eacf(traffic_train)
+```
+Lets test the 2,0,0 and the 2,0,1 and 2,0,4 models:
+
+```{r}
+model_2_0_0 <- Arima(traffic_train, order = c(2,0,0))
+model_2_0_1 <- Arima(traffic_train, order = c(2,0,1))
+model_2_0_4 <- Arima(traffic_train, order = c(2,0,4))
+
+checkresiduals(model_2_0_0)
+checkresiduals(model_2_0_1)
+checkresiduals(model_2_0_4)
+```
+
+lets check some other models like 3,0,2 3,0,11 7,0,2 7,0,5 and 6,0,11 :
+
+```{r}
+model_3_0_2 <- Arima(traffic_train, order = c(3,0,2))
+model_3_0_11 <- Arima(traffic_train, order = c(3,0,11))
+model_7_0_2 <- Arima(traffic_train, order = c(7,0,2))
+model_7_0_5 <- Arima(traffic_train, order = c(7,0,5))
+model_6_0_11 <- Arima(traffic_train, order = c(6,0,11))
+
+checkresiduals(model_3_0_2)
+checkresiduals(model_3_0_11)
+checkresiduals(model_7_0_2)
+checkresiduals(model_7_0_5)
+checkresiduals(model_6_0_11)
+```
+
+lets compare the AIC and BIC values for the above models:
+
+```{r}
+
+comparision = data.frame(best_model[c('aicc', 'bic')])
+names(comparision) = c('aicc', 'bic')
+comparision = rbind(comparision, data.frame(model_2_0_0[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_2_0_1[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_2_0_4[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_3_0_2[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_3_0_11[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_7_0_2[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_7_0_5[c('aicc', 'bic')]))
+comparision = rbind(comparision, data.frame(model_6_0_11[c('aicc', 'bic')]))
+
+comparision$model = c('(2,0,3)', '(2,0,0)', '(2,0,1)', '(2,0,4)', '(3,0,2)', '(3,0,11)', '(7,0,2)',  '(7,0,5)','(6,0,11)')
+
+comparision = comparision[order(comparision$aicc,comparision$bic),]
+
+comparision
+```
+From what we can see the 6,0,11 model has the best aicc and the best bic values, and thus should be the best model we should use.
+
+```{r}
+best_model = model_6_0_11
+```
+
+### Question 4:
+Build a day of the week seasonal $ARIMA(p, d, q)(P,Q,D)_{s}$ model using the training dataset and R auto.arima() function.
+
+Ans:
+
+```{r}
+weekly_data <- ts(data = as.numeric(traffic_df[1:360, 2]),  frequency = 168)
+
+weekly_model <- auto.arima(weekly_data, seasonal = TRUE)
+weekly_model
+checkresiduals(weekly_model)
+```
+
+### Question 5:
+Use the $ARIMA(p, d, q)(P,Q,D)_{s}$ model from Question 4 to forecast for July 1st (which is a Monday). Plot your result.
+Ans:
+```{r}
+forecast_weekly = forecast(weekly_model, h = 24)
+autoplot(forecast_weekly)
+```
+From the forecast wecan see that the model captures the seasonality of the data, and the forecast is pretty accurate.
+
+### Question 6:
+Build a hour of the day seasonal $ARIMA(p, d, q)(P,Q,D)_{s}$ model using the training dataset and R auto.arima() function.
+
+Ans:
+  
+```{r}
+hourly_data <- ts(data = as.numeric(traffic_df[1:360, 2]),  frequency = 24)
+
+hourly_model <- auto.arima(hourly_data, seasonal = TRUE)
+hourly_model
+checkresiduals(hourly_model)
+``` 
+### Question 7:
+Use the $ARIMA(p, d, q)(P,Q,D)_{s}$ model from Question 6 to forecast for July 1st (which is a Monday). Plot your result.
+
+Ans:
+
+```{r}
+forecast_hourly = forecast(hourly_model, h = 24)
+
+autoplot(forecast_hourly)
+```
+This model is also able to accurately capture the seasonality of the data and the forecast is pretty accurate.
+
+### Question 8:
+Compare the forecast of the models from Questions 5 and 7 for July 1 8:00, 9:00, 17:00 and 18:00, which model is better (Questions 4 or 6)?
+Ans:  
+
+```{r}
+
+hourly_window <- window(forecast_hourly$mean,start=1)
+weekly_window <- window(forecast_weekly$mean, start = 1)
+
+# hourly_df <- data.frame(hourly_window)
+
+ggplot() + geom_line(aes(x = 1:24, y = hourly_window), color = "red") + geom_line(aes(x = 1:24, y = weekly_window), color = "blue")   + geom_line(aes(x = 1:24, y = traffic_test), color = "green")  + geom_vline(xintercept = 8)  + geom_vline(xintercept = 9)  + geom_vline(xintercept = 17)  + geom_vline(xintercept = 18)   + labs(x = "Hour", y = "Traffic")   + ggtitle("Hourly vs Weekly vs Original Forecast")   + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+From the above plot we can see that the blue model or the Weekly model is better as its closer to the original dataset. The red model or the hourly model is not as accurate as the weekly model, probably because the hourly model might be confused on a per day basis, while the weekly model has a more broader view of the data.
+

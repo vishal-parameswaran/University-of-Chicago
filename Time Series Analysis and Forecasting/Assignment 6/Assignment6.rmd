@@ -1,0 +1,228 @@
+---
+title: "ADSP 31006 Time Series Analysis and Forecasting"
+output: 
+  html_document:
+    code_folding: show
+    theme:
+      bg: "#202123"
+      fg: "#B8BCC2"
+      primary: "#EA80FC"
+      base_font:
+        google: Prompt
+      heading_font:
+        google: Proza Libre
+      version: 3
+    toc: true
+    toc_float: true
+    smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+if (requireNamespace("thematic"))
+  thematic::thematic_rmd(font = "auto")
+
+library(ggplot2)
+library(TSA)
+library(feasts)
+library(forecast)
+library(fpp)
+library(tseries)
+library(readxl)
+library(dplyr)
+```
+
+# Assignment #6 - Cross-Validation
+## Vishal Parameswaran
+
+### Question 1:
+Load and plot the visitors dataset and plot the dataset with and without the Box Cox transformation. Describe the main dataset characteristics.
+
+Ans:
+```{r}
+load("visitors_monthly.rda")
+visitors_ts = ts(visitors$x, start = c(1985,5), frequency=12)
+autoplot(visitors_ts) + ggtitle("Visitors Time Series") + xlab("Year") + ylab("Visitors")
+```
+
+```{r}
+best_lambda <- BoxCox.lambda(visitors_ts)
+best_lambda
+```
+
+```{r}
+visitors_ts_bc = BoxCox(visitors_ts, lambda = best_lambda)
+autoplot(visitors_ts_bc) + ggtitle("Visitors Time Series with Box Cox Transformation") + xlab("Year") + ylab("Visitors")
+```
+After applying the Box-Cox transformation we can notice that the variance has been stabilized but the time series is not stationary yet as we can observe both trend and seasonality.
+
+
+### Question 2:
+Build two models using the entire visitors dataset
+  1. Model 1: Let the auto.arima() function determine the best order 𝐴𝑅𝐼𝑀𝐴(𝑝, 𝑑, 𝑞)(𝑃, 𝑄, 𝐷)𝑠 model.
+  2. Model 2: Let the ets() function determine the best model for exponential smoothing.
+
+Ans:
+
+```{r}
+visitors_ts.arima <- auto.arima(visitors_ts, lambda=best_lambda)
+
+# Print the best ARIMA model parameters
+print(visitors_ts.arima)
+```
+
+```{r}
+visitors_ts.ets <- ets(visitors_ts,lambda = best_lambda)
+
+print(visitors_ts.ets)
+```
+Ans: Looking at the AICc and BIC values, the auto arima function has a better model as the values are the lowwst.
+
+### Question 3:
+In this section you will apply the time-series cross validation method to train and test various models. Use the following values when training and testing the models:
+• Set the minimum number of samples required to train the model to 160 (i.e., this is the minimum number of samples in the sliding window and the initial number of samples in the expanding window method.) • Set the number the forecast horizon, h, to 1 year (i.e., 12 months.) • Recall that the period, 𝑝, is equal to 12 months • Use a single observation incrementation in each iteration (i.e., shift the training set forward by 1 observation.)
+
+For each iteration, apply the following 4 forecasts: 1) Use the Arima() function to estimate a SARIMA([1,0,1][0,1,2]12 with drift model for: a. Expanding training window and b. Sliding training window
+
+1. Use the Exponential Smoothing function ets() to estimate a MAM (Multiplicative Error, Additive trend, multiplicative Season) model for:
+    1. Expanding training window
+    2. Sliding training window For each test window record the:
+      1. One-year forecast horizon error
+      2. Estimated model AICc value.
+
+Ans:
+```{r}
+# Disable warnings
+defaultW <- getOption("warn") 
+options(warn = -1) 
+
+k <- 160 # minimum data length
+n <- length(visitors_ts)
+
+p <- 12 # Period
+H <- 12 # Forecast Horizon
+
+start <- tsp(visitors_ts)[1]+(k-2)/p
+
+expanding.arima.rmse <- matrix(NA,n-k,H)
+sliding.arima.rmse <- matrix(NA,n-k,H)
+expanding.ets.rmse <- matrix(NA,n-k,H)
+sliding.ets.rmse <- matrix(NA,n-k,H)
+
+expanding.arima.mae <- matrix(NA,n-k,H)
+sliding.arima.mae <- matrix(NA,n-k,H) 
+expanding.ets.mae <- matrix(NA,n-k,H)
+sliding.ets.mae <- matrix(NA,n-k,H)
+
+expanding.arima.aicc = numeric()
+sliding.arima.aicc = numeric()
+expanding.ets.aicc = numeric()
+sliding.ets.aicc = numeric()
+
+for(i in 1:(n-k)) {
+  # Expanding Window
+  expanding.train <- window(visitors_ts, end=start + i/p)
+
+  # Sliding Window
+  sliding.train <- window(visitors_ts, start=start+(i-k+1)/p, end=start+i/p)
+
+  test <- window(visitors_ts, start=start+(i+1)/p, end=start + (i+H)/p) 
+  
+  if (i==1 | i==2 | i==79 | i==80) {
+    cat(c("CV", i,":","len(Expanding Window):",length(expanding.train), "len(Sliding Window):",length(sliding.train), "len(Test):",length(test),'\n'  ))
+    cat(c("TRAIN - Expanding Window:",tsp(expanding.train)[1],'-',tsp(expanding.train)[2],'\n'))
+    cat(c("TRAIN - Sliding Window:",tsp(sliding.train)[1],'-',tsp(sliding.train)[2],'\n'))
+    cat(c("TEST:",tsp(test)[1],'-',tsp(test)[2],'\n'))
+    cat("\n")
+  }
+  
+  expanding.arima <- Arima(expanding.train, order=c(1,0,1), seasonal=list(order=c(0,1,2), period=p),
+                        include.drift=TRUE, lambda=best_lambda, method="ML")
+  expanding.arima.aicc <- append(expanding.arima.aicc, expanding.arima$aicc)
+  expanding.arima.forecast <- forecast(expanding.arima, h=H)
+  expanding.arima.rmse[i,1:length(test)] <- expanding.arima.forecast[['mean']]-test
+  expanding.arima.mae[i,1:length(test)] <- abs(expanding.arima.forecast[['mean']]-test)
+
+  sliding.arima <- Arima(sliding.train, order=c(1,0,1), seasonal=list(order=c(0,1,2), period=p),
+                        include.drift=TRUE, lambda=best_lambda, method="ML")
+  sliding.arima.aicc <- append(sliding.arima.aicc, sliding.arima$aicc)
+  sliding.arima.forecast <- forecast(sliding.arima, h=H)
+  sliding.arima.rmse[i,1:length(test)] <- sliding.arima.forecast[['mean']]-test
+  sliding.arima.mae[i,1:length(test)] <- abs(sliding.arima.forecast[['mean']]-test)
+
+  expanding.ets <- ets(expanding.train, model = 'MAM')
+  expanding.ets.aicc <- append(expanding.ets.aicc, expanding.ets$aicc)
+  expanding.ets.forecast <- forecast(expanding.ets, h=H)
+  expanding.ets.rmse[i,1:length(test)] <- expanding.ets.forecast[['mean']]-test
+  expanding.ets.mae[i,1:length(test)] <- abs(expanding.ets.forecast[['mean']]-test)
+
+  sliding.ets <- ets(sliding.train, model = 'MAM')
+  sliding.ets.aicc <- append(sliding.ets.aicc, sliding.ets$aicc)
+  sliding.ets.forecast <- forecast(sliding.ets, h=H)
+  sliding.ets.rmse[i,1:length(test)] <- sliding.ets.forecast[['mean']]-test
+  sliding.ets.mae[i,1:length(test)] <- abs(sliding.ets.forecast[['mean']]-test)
+
+}
+```
+lets plot the MAE, vs Forecast Horizon for each model
+```{r}
+plot(1:12, colMeans(expanding.arima.mae,na.rm=TRUE), type="l",col=1,xlab="horizon", 
+     ylab="MAE", main = 'Mean Absolute Forecast Error (MAE) vs forecast horizon')
+lines(1:12, colMeans(sliding.arima.mae,na.rm=TRUE), type="l",col=2)
+lines(1:12, colMeans(expanding.ets.mae,na.rm=TRUE), type="l",col=3)
+lines(1:12, colMeans(sliding.ets.mae,na.rm=TRUE), type="l",col=4)
+legend("topleft",legend=c("ARIMA - Expanding Window","ARIMA - Sliding Window",
+                          'ETS - Expanding Window', 'ETS - Sliding Window '),col=1:4,lty=1)
+```
+
+lets plot the RMSe vs Forecast Horizon for each model
+
+```{r}
+plot(1:12, sqrt(colMeans((expanding.arima.rmse)^2,na.rm=TRUE)), type="l",col=1,xlab="horizon", 
+     ylab="RMSE", main = 'Root-Mean-Square-Error Forecast Error (RMSE) vs forecast horizon')
+lines(1:12, sqrt(colMeans((sliding.arima.rmse)^2,na.rm=TRUE)), type="l",col=2)
+lines(1:12, sqrt(colMeans((expanding.ets.rmse)^2,na.rm=TRUE)), type="l",col=3)
+lines(1:12, sqrt(colMeans((sliding.ets.rmse)^2,na.rm=TRUE)), type="l",col=4)
+legend("topleft",legend=c("ARIMA - Expanding Window","ARIMA - Sliding Window",
+                          'ETS - Expanding Window', 'ETS - Sliding Window '),col=1:4,lty=1)
+```
+Lets plot the various AICC values
+```{r}
+iterations <- 1:length(expanding.arima.aicc)
+
+plot(iterations, expanding.arima.aicc, type = "l", col = 1, lty = 1, ylim = c(-500, 3000),
+     xlab = "Iterations", ylab = "AICc", main = "AICc values for Different Models")
+
+lines(iterations, sliding.arima.aicc, col = 2, lty = 1)
+lines(iterations, expanding.ets.aicc, col = 3, lty = 1)
+lines(iterations, sliding.ets.aicc, col = 4, lty = 1)
+
+legend("topleft", legend = c("ARIMA - Expanding",
+                             "ARIMA - Sliding",
+                             "ETS - Expanding",
+                             "ETS - Sliding"),
+       col = 1:4, lty = 1)
+```
+
+We can see that the sliding AICc values for the ARIMA model is very similar to the expanding value, so lets plot those two separately.
+
+```{r}
+iterations <- 1:length(expanding.arima.aicc)
+
+par(mfrow = c(1, 2))
+
+
+plot(iterations, expanding.arima.aicc, type = "l", col = 1, lty = 1,
+     xlab = "Iterations", ylab = "AICc value", main = "AICc - ARIMA Expanding")
+
+
+plot(iterations, sliding.arima.aicc, type = "l", col = 2, lty = 1,
+     xlab = "Iterations", ylab = "AICc value", main = "AICc - ARIMA Sliding")
+```
+
+It can be seen that the Arima model is considerably better as it has lower AICc values.
+
+### Question 4:
+What are the disadvantages of the above methods? What would be a better approach to estimate the models? Hint: How were the SARIMA and exponential time series models determined in question 3?
+
+Ans:
+Using SARIMA models to predict future data points can take a lot of computer power. This is especially true when the data sets are big, when you're trying many different settings, and when you're looking far ahead into the future, all of which can make the process slow. The sliding window method, where you move your set of data points over time, can lead to wrong choices about which data to use and not having enough data to train on. The expanding window method, where you keep adding new data points for training, might accidentally include future information too soon or take too long to show if the model works well. To solve these problems, you might mix both methods or try other ways like bootstrapping (sampling with replacement) or dividing the data into several chunks for validation, similar to folds in cross-validation but for time series. Also, using the auto.arima() function to pick the SARIMA model settings automatically can help make the predictions more accurate.

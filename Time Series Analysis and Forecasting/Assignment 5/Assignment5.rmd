@@ -1,0 +1,205 @@
+---
+title: "ADSP 31006 Time Series Analysis and Forecasting"
+output: 
+  html_document:
+    code_folding: show
+    theme:
+      bg: "#202123"
+      fg: "#B8BCC2"
+      primary: "#EA80FC"
+      base_font:
+        google: Prompt
+      heading_font:
+        google: Proza Libre
+      version: 3
+    toc: true
+    toc_float: true
+    smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+if (requireNamespace("thematic"))
+  thematic::thematic_rmd(font = "auto")
+
+library(ggplot2)
+library(TSA)
+library(feasts)
+library(forecast)
+library(fpp)
+library(tseries)
+library(readxl)
+library(dplyr)
+```
+
+# Assignment #5 - Forecasting
+## Vishal Parameswaran
+
+### Question 1:
+Load the condmilk.rda dataset and split it into a training dataset (1971/1 - 1979/12) and a test dataset (1980/1 - 1980/12)
+
+Ans:
+```{r}
+load("condmilk.rda")
+
+condmilk.train <- window(condmilk, start = c(1971, 1), end = c(1979, 12))
+condmilk.test <- window(condmilk, start = c(1980, 1))
+
+autoplot(condmilk)
+
+autoplot(condmilk.train)
+
+autoplot(condmilk.test)
+```
+We can see strong seasonality in the data. There does not seem to be a trend present in the data though. We can also see that the variance of the data is not constant. This should prove that the data is not stationary, but we can run further tests to confirm. 
+
+### Question 2:
+Plot the training dataset. Is Box-Cox transformation necessary for this data? Why?
+
+Ans:
+
+```{r}
+autoplot(condmilk.train) + ggtitle("Condensed Milk Production Train Dataset")
+```
+Lets perform the Shapiro-Wilk test to check for normality:
+
+```{r}
+shapiro.test(condmilk.train)
+
+```
+The p-value from the test, suggests that the data is not stationary, and thus we should use box cox transformations.
+Lets perform box cox transformations on the data:
+
+```{r}
+condmilk.train.bc <- BoxCox(condmilk.train, lambda = BoxCox.lambda(condmilk.train))
+```
+
+
+### Question 3:
+Is the training dataset stationary? If not, find an appropriate differencing which yields seasonal and trend stationary training dataset. Plot the ACF and PACF to determine if the detrended and deseasonalized time series is stationary.
+
+Ans:
+Lets test for stationarity:
+```{r}
+tsdisplay(condmilk.train.bc)
+adf.test(condmilk.train.bc,k = 12)
+```
+While there is no trend, we can clearly see seasonality present. Lets perform seasonal differencing to remove the seasonality:
+
+```{r}
+condmilk.train.diff <- diff(condmilk.train.bc, lag = 12)
+tsdisplay(condmilk.train.diff)
+adf.test(condmilk.train.diff,k = 12)
+```
+We have removed the seasonality but the data is still not stationary. Lets perform regular differencing to remove the trend:
+
+```{r}
+condmilk.train.diff2 <- diff(condmilk.train.diff,1)
+tsdisplay(condmilk.train.diff2)
+adf.test(condmilk.train.diff2)
+```
+We can finally see that the data is now stationary. Thus we should first apply lag 12 differencing to remove seasonality, and then apply first order differencing to make it stationary.
+
+
+### Question 4:
+Build two $ARIMA(p,d,q)(P,Q,D)s$ models using the training dataset and auto.arima() function.
+  
+  1. Model 1: Let the auto.arima() function determine the best order of non-seasonal and seasonal differencing.
+  2. Model 2: Set the order of seasonal-differencing $d$ to 1 and $D$ to 1.
+
+Report the resulting $p,d,q,P,Q,D,s$ and the coefficients values for all cases and compare their AICc and BIC values.
+
+Ans:
+Lets build the auto arima model:
+
+```{r}
+model.auto <- auto.arima(condmilk.train, seasonal = TRUE, lambda = "auto")
+summary(model.auto)
+```
+We can see that the auto arima model has chosen the following parameters: (1,0,0)(2,1,0)[12]
+The AICc is -410.37 and the BIC is -400.55
+
+Lets build the second model:
+```{r}
+model.auto.diff1 <- auto.arima(condmilk.train,seasonal = TRUE,d = 1, D = 1, , lambda = "auto")
+summary(model.auto.diff1)
+```
+We can see that the auto arima model has chosen the following parameters: (1,1,1)(2,1,0)[12]
+The AICc is -399.58 and the BIC is -387.49
+
+It looks like model 1 has a lower AICc and BIC, and thus is a better model.
+
+### Question 5:
+Plot the residuals ACF of both models from part 4 and use the Ljung-Box Test with lag 12 to verify your conclusion.
+Ans:
+Lets plot the residuals ACF of both models:
+
+```{r}
+checkresiduals(model.auto,lag = 12)
+checkresiduals(model.auto.diff1,lag = 12)
+```
+The low p-value from the Ljung-Box test suggests that the residuals are not white noise. The spikes at 5 and at 36 indicate that auto correlation still exists in the data
+
+### Question 6:
+Use both models from part 4 and the h-period argument in the forecast() function to forecast each month of 1980 (i.e., Jan, Feb, …, Dec.) Plot the test dataset and forecasted values.
+
+Ans:
+
+```{r}
+forecast.model.auto <- forecast(model.auto, h = 12)
+forecast.model.auto.diff1 <- forecast(model.auto.diff1, h = 12)
+
+ggplot() + 
+geom_line(aes(x = 1:12, y = forecast.model.auto$mean), color = "red") + 
+geom_line(aes(x = 1:12, y = forecast.model.auto.diff1$mean), color = "blue") + 
+geom_line(aes(x = 1:12, y = condmilk.test), color = "green") + 
+labs(x = "Month", y = "Value")   + ggtitle("Auto Model vs Diff1 Auto Model vs Test") + 
+theme(plot.title = element_text(hjust = 0.5))
+
+
+```
+
+### Question 7:
+Compare the forecast with the actual test data by calculating the Mean Absolute Percentage Error (MAPE) and Mean Squared Error (MSE). Which model is better to forecast the Manufacturer's Stocks for each month of 1980 (i.e., Jan, Feb, …, Dec)? Why?
+
+Ans:
+
+```{r}
+acc.auto.mape <- accuracy(forecast.model.auto, condmilk.test)[2,5]
+acc.diff.mape <- accuracy(forecast.model.auto.diff1, condmilk.test)[2,5]
+
+acc.auto.mse <- accuracy(forecast.model.auto, condmilk.test)[2,2]**2
+acc.diff.mse <- accuracy(forecast.model.auto.diff1, condmilk.test)[2,2]**2
+
+comp <- data.frame(c(acc.auto.mape,acc.diff.mape),c(acc.auto.mse,acc.diff.mse),c("Auto Model","Diff1 Auto Model"))
+names(comp) <- c("MAPE","MSE","Model")
+comp
+```
+We can see that there is barely any difference and so we can use either model.
+
+### Question 8:
+Forecast each month of 1980 (i.e., Jan, Feb, …, Dec.) using the seasonal naïve forecast method. Plot the test dataset and forecasted values and compare the forecast with the actual test data by calculating the Mean Absolute Percentage Error (MAPE) and Mean Squared Error (MSE).
+Ans:  
+
+```{r}
+forecast.snaive <- snaive(condmilk.train, h = 12)
+ggplot() + 
+geom_line(aes(x = 1:12, y = forecast.snaive$mean), color = "red") + 
+geom_line(aes(x = 1:12, y = condmilk.test), color = "green") + 
+labs(x = "Month", y = "Value")   + ggtitle("Naive Model vs Test") + 
+theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+acc.naive.MAPE <- accuracy(forecast.snaive, condmilk.test)[2,5]
+acc.naive.MSE <- accuracy(forecast.snaive, condmilk.test)[2,2]**2
+
+naive.comp <- data.frame(c(acc.naive.MAPE),c(acc.naive.MSE),c("Naive Model"))
+names(naive.comp) <- c("MAPE","MSE","Model")
+comp <- rbind(comp,naive.comp)
+comp
+```
+
+### Question 9:
+Use the snaive() function to forecast each month of 1980 (i.e., Test Period.) Did your best model beat the seasonal naïve approach?
+Ans: 
+It is clear that the Naive Method was the better fit as it had both a lower MAPE and MSE. Thus the best model was the Naive Model.
